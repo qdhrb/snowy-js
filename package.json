@@ -1,0 +1,17 @@
+{
+  "name": "snowy-js",
+  "version": "1.0.3",
+  "description": "Snowy js lib",
+  "main": "src/idnex.js",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "keywords": [
+    "js"
+  ],
+  "author": "HanRubing <qdhrb@sina.com>",
+  "license": "ISC",
+  "dependencies": {
+    "rollup-plugin-replace": "^2.2.0"
+  }
+}
