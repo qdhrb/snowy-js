@@ -47,7 +47,7 @@ export function clone(src) {
 		if (o === null || typeof(o) !== 'object') return o;
 		let n = Array.isArray(o) ? [] : {};
 		for (let key in o) {
-			if (o.hasOwnProperty(key)) n[key] = _c_obj(o[key]);
+			o.hasOwnProperty(key) && (n[key] = _c_obj(o[key]));
 		}
 		return n;
 	}

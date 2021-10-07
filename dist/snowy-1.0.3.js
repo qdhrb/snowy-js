@@ -522,15 +522,15 @@ const $S = (function () {
 		 * @param {string} v 内容字符串
 		 * @returns {this|string}
 		 */
-		html(v) {
+		content(v) {
 			if (arguments.length >= 1) {
 				this.dom.innerHTML = v; return this;
 			}
 			return this.dom.innerHTML;
 		}
 		/**
-		 * 读取或设置text
-		 * @param {string} txt 文本
+		 * 读取火设置文本内容
+		 * @param {String} txt 文本内容
 		 * @returns {this|string}
 		 */
 		text(txt) {
@@ -904,13 +904,44 @@ const $S = (function () {
 	 */
 	const _realLib = Ele.lib = {};	// 在Ele中记录lib是为了方便检查
 
+	/**
+	 * 注册元素定义
+	 * @param {string|String[]} tag 标签
+	 * @param {function(tag:string):Ele|*} fn 创建函数
+	 */
+	function register(tag, fn) {
+		if (!fn) return;
+		for (let t of i2a(tag)) {
+			t && (_realLib[t] = fn);
+		}
+	}
+	/**
+	 * 新建元素
+	 * @param {string} tag 标签
+	 * @param {string|Object.<string,*>} atc css类或者属性集
+	 * @param {String} [content] 新建元素的内容（html）
+	 * @returns {Ele|*}
+	 */
+	function cnew(tag, atc, content) {
+		let fn = _realLib[tag],
+			e = fn ? fn(tag) : new Ele(tag);
+		if (e) {
+			typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
+			e.content(content);
+		}
+		return e;
+	}
+
+	// 是否定义global的cnew？
+	window.cnew = cnew;
+
 	// export object
 	const app = {
 		i2a, rand, fix, split, clone, walkAT, findAT, getItem, setItem, nextId, lastId,
 		config: config$1,
 		urlParam, reqGet, reqPost, reqPut, reqDelete, loadScripts,
 
-		Ele
+		Ele, cnew, register
 	};
 
 	return app;

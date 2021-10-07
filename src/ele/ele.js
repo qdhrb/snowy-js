@@ -158,15 +158,15 @@ export default class Ele {
 	 * @param {string} v 内容字符串
 	 * @returns {this|string}
 	 */
-	html(v) {
+	content(v) {
 		if (arguments.length >= 1) {
 			this.dom.innerHTML = v; return this;
 		}
 		return this.dom.innerHTML;
 	}
 	/**
-	 * 读取或设置text
-	 * @param {string} txt 文本
+	 * 读取火设置文本内容
+	 * @param {String} txt 文本内容
 	 * @returns {this|string}
 	 */
 	text(txt) {
@@ -563,7 +563,7 @@ export function cnew(tag, atc, content) {
 		e = fn ? fn(tag) : new Ele(tag);
 	if (e) {
 		typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
-		e.html(content);
+		e.content(content);
 	}
 	return e;
 }
