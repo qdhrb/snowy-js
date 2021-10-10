@@ -123,7 +123,7 @@ let _lastId = null;
  * @returns {string}
  */
 export function nextId(prefix) {
-	return _lastId = prefix + '-' + (++_idSeed);
+	return _lastId = prefix + '_' + (++_idSeed);
 }
 /**
  * 取出最后一个通过nextId创建的id

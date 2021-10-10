@@ -122,7 +122,7 @@ const $S = (function () {
 			if (o === null || typeof(o) !== 'object') return o;
 			let n = Array.isArray(o) ? [] : {};
 			for (let key in o) {
-				if (o.hasOwnProperty(key)) n[key] = _c_obj(o[key]);
+				o.hasOwnProperty(key) && (n[key] = _c_obj(o[key]));
 			}
 			return n;
 		}
@@ -198,7 +198,7 @@ const $S = (function () {
 	 * @returns {string}
 	 */
 	function nextId(prefix) {
-		return _lastId = prefix + '-' + (++_idSeed);
+		return _lastId = prefix + '_' + (++_idSeed);
 	}
 	/**
 	 * 取出最后一个通过nextId创建的id
@@ -225,7 +225,7 @@ const $S = (function () {
 	 * @param {*} val 配置项值
 	 * @returns {*}
 	 */
-	function config$1(name, val) {
+	function config(name, val) {
 		if (arguments.length >= 2) {
 			_config[name] = val;
 			return;
@@ -397,13 +397,32 @@ const $S = (function () {
 		/**
 		 * 注册元素定义；这个静态方法用于方便子类的注册
 		 * @param {string|string[]} tag 标签
+		 * @param {function(tag:string):Ele|*} [fn] 创建函数；若为空，则使用当前类创建
+		 */
+		static register(tag, fn) {
+			if (!fn) {
+				let typefn = this;
+				fn = t => new typefn(t);
+			}
+			for (let t of i2a(tag)) {
+				t && (_eleLib[t] = fn);
+			}
+		}
+		/**
+		 * 新建元素
+		 * @param {string} tag 标签
+		 * @param {string|Object.<string,*>} atc css类或者属性集
+		 * @param {String} [content] 新建元素的内容（html）
 		 * @returns {Ele|*}
 		 */
-		static register(tag) {
-			let typefn = this;	// 指向子类
-			for (let t of i2a(tag)) {
-				if (t) _realLib[t] = () => new typefn(tag);
+		static cnew(tag, atc, content) {
+			let fn = _eleLib[tag],
+				e = fn ? fn(tag) : new Ele(tag);
+			if (e) {
+				typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
+				e.content(content);
 			}
+			return e;
 		}
 		// edit ------------------------------------------------------------------------------------------------------------
 		/**
@@ -478,6 +497,15 @@ const $S = (function () {
 				if (!sub.parentElement) throw 'Ele.insert failed, no parent: ' + pos;
 				sub.insertAdjacentElement(pos === 'afterend' ? 'beforebegin' : 'afterend', this.dom);
 			}
+			return this;
+		}
+		/**
+		 * 从父节点中移除
+		 * @returns {this}
+		 */
+		offline() {
+			let pp = this.dom && this.dom.parentElement;
+			pp && pp.removeChild(this.dom);
 			return this;
 		}
 		// attributes & content --------------------------------------------------------------------------------------------
@@ -902,46 +930,99 @@ const $S = (function () {
 	 * 页面元素库
 	 * @type {Object.<string,function():Ele|*>}
 	 */
-	const _realLib = Ele.lib = {};	// 在Ele中记录lib是为了方便检查
+	const _eleLib = Ele.lib = {};	// 在Ele中记录lib是为了方便检查
 
-	/**
-	 * 注册元素定义
-	 * @param {string|String[]} tag 标签
-	 * @param {function(tag:string):Ele|*} fn 创建函数
-	 */
-	function register(tag, fn) {
-		if (!fn) return;
-		for (let t of i2a(tag)) {
-			t && (_realLib[t] = fn);
+	/** Page */
+	class Page extends Ele {
+		constructor(eTag) {
+			super(eTag);
+			this.id(nextId('page'));
+		}
+	}
+
+	/** Frame */
+	class Frame extends Ele {
+		constructor(eTag) {
+			super(eTag);
+			/** @type {Ele} */
+			this.sheet = null;
+			/** @type {Object.<string,Page>} */
+			this.pages = {};
+			/** @type {Page} */
+			this.cpage = null;
+		}
+		/**
+		 * 添加页面
+		 * @param {Page|*} page 页面
+		 * @returns {Page|*}
+		 */
+		addPage(page) {
+			if (!this.sheet || !page) return null;
+			this.sheet.append(page);
+			this.pages[page.id()] = page;
+			return page;
+		}
+		/**
+		 * 移除页面
+		 * @param {String} pid 页面id
+		 * @returns {Page|*} 返回页面对象；null表示没有找到该页
+		 */
+		removePage(pid) {
+			let p = this.pages[pid];
+			if (!p) return null;
+			delete this.pages[pid];
+			p.offline();
+			return p;
+		}
+		/**
+		 * 显示页面
+		 * @param {string} pid 页面id
+		 */
+		showPage(pid) {
+			let p = this.pages[pid], oid = null;
+			if (!p) return;
+			if (this.cpage) {
+				oid = this.cpage.id();
+				this.cpage.hide();
+			}
+			this.cpage = p;
+			p.show();
+			this.dispatch('snowy_page_changed', {
+				oldPid: oid, pid: p.id()
+			});
 		}
 	}
 	/**
-	 * 新建元素
-	 * @param {string} tag 标签
-	 * @param {string|Object.<string,*>} atc css类或者属性集
-	 * @param {String} [content] 新建元素的内容（html）
-	 * @returns {Ele|*}
+	 * 当前frame；一般一个html中只有一个frame
+	 * @type {Frame}
 	 */
-	function cnew(tag, atc, content) {
-		let fn = _realLib[tag],
-			e = fn ? fn(tag) : new Ele(tag);
-		if (e) {
-			typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
-			e.content(content);
-		}
-		return e;
+	Frame.current = null;
+	// 注册
+	Frame.register('frame');
+
+	/**
+	 * 初始化-frame
+	 * @param {Frame|*} root 根节点
+	 * @returns {Frame|*}
+	 */
+	function init(root) {
+		this.root = root;
+		if (root instanceof Frame) Frame.current = root;
+		if (root.isOffline()) root.appendTo(document.body);
+		return root;
 	}
 
 	// 是否定义global的cnew？
-	window.cnew = cnew;
+	window.cnew = Ele.cnew;
 
 	// export object
 	const app = {
 		i2a, rand, fix, split, clone, walkAT, findAT, getItem, setItem, nextId, lastId,
-		config: config$1,
+		config,
 		urlParam, reqGet, reqPost, reqPut, reqDelete, loadScripts,
 
-		Ele, cnew, register
+		init,
+		Ele, Frame, Page,
 	};
 
 	return app;

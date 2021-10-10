@@ -33,13 +33,32 @@ export default class Ele {
 	/**
 	 * 注册元素定义；这个静态方法用于方便子类的注册
 	 * @param {string|string[]} tag 标签
+	 * @param {function(tag:string):Ele|*} [fn] 创建函数；若为空，则使用当前类创建
+	 */
+	static register(tag, fn) {
+		if (!fn) {
+			let typefn = this;
+			fn = t => new typefn(t);
+		}
+		for (let t of i2a(tag)) {
+			t && (_eleLib[t] = fn);
+		}
+	}
+	/**
+	 * 新建元素
+	 * @param {string} tag 标签
+	 * @param {string|Object.<string,*>} atc css类或者属性集
+	 * @param {String} [content] 新建元素的内容（html）
 	 * @returns {Ele|*}
 	 */
-	static register(tag) {
-		let typefn = this;	// 指向子类
-		for (let t of i2a(tag)) {
-			if (t) _realLib[t] = () => new typefn(tag);
+	static cnew(tag, atc, content) {
+		let fn = _eleLib[tag],
+			e = fn ? fn(tag) : new Ele(tag);
+		if (e) {
+			typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
+			e.content(content);
 		}
+		return e;
 	}
 	// edit ------------------------------------------------------------------------------------------------------------
 	/**
@@ -114,6 +133,15 @@ export default class Ele {
 			if (!sub.parentElement) throw 'Ele.insert failed, no parent: ' + pos;
 			sub.insertAdjacentElement(pos === 'afterend' ? 'beforebegin' : 'afterend', this.dom);
 		}
+		return this;
+	}
+	/**
+	 * 从父节点中移除
+	 * @returns {this}
+	 */
+	offline() {
+		let pp = this.dom && this.dom.parentElement;
+		pp && pp.removeChild(this.dom);
 		return this;
 	}
 	// attributes & content --------------------------------------------------------------------------------------------
@@ -538,32 +566,4 @@ const _nearby_map = {
  * 页面元素库
  * @type {Object.<string,function():Ele|*>}
  */
-const _realLib = Ele.lib = {};	// 在Ele中记录lib是为了方便检查
-
-/**
- * 注册元素定义
- * @param {string|String[]} tag 标签
- * @param {function(tag:string):Ele|*} fn 创建函数
- */
-export function register(tag, fn) {
-	if (!fn) return;
-	for (let t of i2a(tag)) {
-		t && (_realLib[t] = fn);
-	}
-}
-/**
- * 新建元素
- * @param {string} tag 标签
- * @param {string|Object.<string,*>} atc css类或者属性集
- * @param {String} [content] 新建元素的内容（html）
- * @returns {Ele|*}
- */
-export function cnew(tag, atc, content) {
-	let fn = _realLib[tag],
-		e = fn ? fn(tag) : new Ele(tag);
-	if (e) {
-		typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
-		e.content(content);
-	}
-	return e;
-}
+const _eleLib = Ele.lib = {};	// 在Ele中记录lib是为了方便检查

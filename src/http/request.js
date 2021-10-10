@@ -1,3 +1,4 @@
+import config from '../config';
 /**
  * 远程调用
  * @param {string|ReqOption} url URL
