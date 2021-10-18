@@ -404,25 +404,7 @@ const $S = (function () {
 				let typefn = this;
 				fn = t => new typefn(t);
 			}
-			for (let t of i2a(tag)) {
-				t && (_eleLib[t] = fn);
-			}
-		}
-		/**
-		 * 新建元素
-		 * @param {string} tag 标签
-		 * @param {string|Object.<string,*>} atc css类或者属性集
-		 * @param {String} [content] 新建元素的内容（html）
-		 * @returns {Ele|*}
-		 */
-		static cnew(tag, atc, content) {
-			let fn = _eleLib[tag],
-				e = fn ? fn(tag) : new Ele(tag);
-			if (e) {
-				typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
-				e.content(content);
-			}
-			return e;
+			EleLib.register(tag, fn);
 		}
 		// edit ------------------------------------------------------------------------------------------------------------
 		/**
@@ -925,12 +907,49 @@ const $S = (function () {
 	};
 
 	// Ele lib -------------------------------------------------------------------------------------------------------------
-
 	/**
-	 * 页面元素库
-	 * @type {Object.<string,function():Ele|*>}
+	 * Ele Libary
 	 */
-	const _eleLib = Ele.lib = {};	// 在Ele中记录lib是为了方便检查
+	class EleLib {
+		/**
+		 * @type {Object.<string,function():Ele|*>}
+		 */
+		static _all = {}
+		/**
+		 * 注册元素定义
+		 * @param {string|string[]} tags 标签
+		 * @param {function(tag:string):Ele|*} [fn] 创建函数；若为空，则使用当前类创建
+		 */
+		static register(tags, fn) {
+			for (let t of i2a(tags)) {
+				t && (this._all[t] = fn);
+			}
+		}
+		/**
+		 * 获取元素定义
+		 * @param {String} [tag] 标签
+		 * @returns {function(tag:string):Ele|*|Object.<string,function(tag:string):Ele|*>}
+		 */
+		static getRegister(tag) {
+			return this._all[tag];
+		}
+		/**
+		 * 新建元素
+		 * @param {string} tag 标签
+		 * @param {string|Object.<string,*>} atc css类或者属性集
+		 * @param {String} [content] 新建元素的内容（html）
+		 * @returns {Ele|*}
+		 */
+		static cnew(tag, atc, content) {
+			let fn = this._all[tag],
+				e = fn ? fn(tag) : new Ele(tag);
+			if (e) {
+				typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
+				e.content(content);
+			}
+			return e;
+		}
+	}
 
 	/** Page */
 	class Page extends Ele {
@@ -1001,19 +1020,29 @@ const $S = (function () {
 		/**
 		 * 显示页面
 		 * @param {string} pid 页面id
+		 * @param [params] 显示参数
+		 * @param {boolean} [noPush] 不添加历史状态
 		 */
-		showPage(pid) {
+		showPage(pid, params, noPush) {
 			let p = this.pages[pid], oid = null;
-			if (!p) return;
+			if (!p) {
+				if (!Ele.getRegister(pid)) return;
+				p = Ele.cnew(pid);
+				this.addPage(p);
+			}
 			if (this.cpage) {
 				oid = this.cpage.id();
 				this.cpage.hide();
 			}
 			this.cpage = p;
-			p.show();
+			p.show(params);
+			if (!noPush && (!history.state || history.state.pid != p.pid)) {
+				let url = urlParam(null, 'p', pid);
+				history.pushState({pid:p.pid}, document.title + '-' + p.title, url);
+			}
 			this.dispatch('snowy_page_changed', {
 				oldPid: oid, pid: p.id()
-			});
+			}, 0);
 		}
 	}
 	/**
@@ -1037,7 +1066,7 @@ const $S = (function () {
 	}
 
 	// 是否定义global的cnew？
-	window.cnew = Ele.cnew;
+	window.cnew = EleLib.cnew;
 
 	// export object
 	const app = {
@@ -1046,7 +1075,7 @@ const $S = (function () {
 		urlParam, reqGet, reqPost, reqPut, reqDelete, loadScripts,
 
 		init,
-		Ele, Frame, Page,
+		Ele, EleLib, Frame, Page,
 	};
 
 	return app;
