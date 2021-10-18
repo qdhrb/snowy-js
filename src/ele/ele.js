@@ -572,7 +572,7 @@ export class EleLib {
 	/**
 	 * 新建元素
 	 * @param {string} tag 标签
-	 * @param {string|Object.<string,*>} atc css类或者属性集
+	 * @param {string|Object.<string,*>} [atc] css类或者属性集
 	 * @param {String} [content] 新建元素的内容（html）
 	 * @returns {Ele|*}
 	 */
