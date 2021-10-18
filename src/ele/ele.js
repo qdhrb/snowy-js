@@ -40,25 +40,7 @@ export default class Ele {
 			let typefn = this;
 			fn = t => new typefn(t);
 		}
-		for (let t of i2a(tag)) {
-			t && (_eleLib[t] = fn);
-		}
-	}
-	/**
-	 * 新建元素
-	 * @param {string} tag 标签
-	 * @param {string|Object.<string,*>} atc css类或者属性集
-	 * @param {String} [content] 新建元素的内容（html）
-	 * @returns {Ele|*}
-	 */
-	static cnew(tag, atc, content) {
-		let fn = _eleLib[tag],
-			e = fn ? fn(tag) : new Ele(tag);
-		if (e) {
-			typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
-			e.content(content);
-		}
-		return e;
+		EleLib.register(tag, fn);
 	}
 	// edit ------------------------------------------------------------------------------------------------------------
 	/**
@@ -561,9 +543,46 @@ const _nearby_map = {
 }
 
 // Ele lib -------------------------------------------------------------------------------------------------------------
-
 /**
- * 页面元素库
- * @type {Object.<string,function():Ele|*>}
+ * Ele Libary
  */
-const _eleLib = Ele.lib = {};	// 在Ele中记录lib是为了方便检查
+export class EleLib {
+	/**
+	 * @type {Object.<string,function():Ele|*>}
+	 */
+	static _all = {}
+	/**
+	 * 注册元素定义
+	 * @param {string|string[]} tags 标签
+	 * @param {function(tag:string):Ele|*} [fn] 创建函数；若为空，则使用当前类创建
+	 */
+	static register(tags, fn) {
+		for (let t of i2a(tags)) {
+			t && (this._all[t] = fn);
+		}
+	}
+	/**
+	 * 获取元素定义
+	 * @param {String} [tag] 标签
+	 * @returns {function(tag:string):Ele|*|Object.<string,function(tag:string):Ele|*>}
+	 */
+	static getRegister(tag) {
+		return this._all[tag];
+	}
+	/**
+	 * 新建元素
+	 * @param {string} tag 标签
+	 * @param {string|Object.<string,*>} atc css类或者属性集
+	 * @param {String} [content] 新建元素的内容（html）
+	 * @returns {Ele|*}
+	 */
+	static cnew(tag, atc, content) {
+		let fn = this._all[tag],
+			e = fn ? fn(tag) : new Ele(tag);
+		if (e) {
+			typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
+			e.content(content);
+		}
+		return e;
+	}
+}

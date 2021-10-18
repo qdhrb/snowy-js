@@ -8,12 +8,13 @@ import { reqGet, reqPost, reqPut, reqDelete } from './http/request';
 import { loadScripts } from './http/loadscript';
 
 import Ele from './ele/ele';
+import {EleLib} from './ele/ele';
 import Frame from './frame/frame';
 import Page from './frame/page';
 import { init } from './frame/init';
 
 // 是否定义global的cnew？
-if (__CNEW) window.cnew = Ele.cnew;
+if (__CNEW) window.cnew = EleLib.cnew;
 
 // export object
 const app = {
@@ -22,6 +23,6 @@ const app = {
 	urlParam, reqGet, reqPost, reqPut, reqDelete, loadScripts,
 
 	init,
-	Ele, Frame, Page,
+	Ele, EleLib, Frame, Page,
 };
 export default app;

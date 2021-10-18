@@ -1,5 +1,6 @@
 import Ele from '../ele/ele';
 import Page from './page';
+import { urlParam } from '../http/urlparam';
 
 /** Frame */
 export default class Frame extends Ele {
@@ -38,19 +39,29 @@ export default class Frame extends Ele {
 	/**
 	 * 显示页面
 	 * @param {string} pid 页面id
+	 * @param [params] 显示参数
+	 * @param {boolean} [noPush] 不添加历史状态
 	 */
-	showPage(pid) {
+	showPage(pid, params, noPush) {
 		let p = this.pages[pid], oid = null;
-		if (!p) return;
+		if (!p) {
+			if (!Ele.getRegister(pid)) return;
+			p = Ele.cnew(pid);
+			this.addPage(p);
+		}
 		if (this.cpage) {
 			oid = this.cpage.id();
 			this.cpage.hide();
 		}
 		this.cpage = p;
-		p.show();
+		p.show(params);
+		if (!noPush && (!history.state || history.state.pid != p.pid)) {
+			let url = urlParam(null, 'p', pid);
+			history.pushState({pid:p.pid}, document.title + '-' + p.title, url);
+		}
 		this.dispatch('__EVENT_page_changed', {
 			oldPid: oid, pid: p.id()
-		})
+		}, 0);
 	}
 }
 /**
