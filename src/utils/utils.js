@@ -83,19 +83,19 @@ export function setItem(obj, ...nvs) {
 }
 /**
  * 遍历基于数组的树，父节点优先
- * @param {[]} items
- * @param {function(ctx:[], item:*):*} fn 处理函数，如果有子项需要处理，则返回子项数组
+ * @param {*} parent 初始父值，用于fn回调
+ * @param {[]} items 子项
+ * @param {String} bn 项目的子项元素名称，一般是children
+ * @param {function(p, item):*} fn 处理函数
  */
-export function walkAT(items, fn) {
-	let ctx = [];
-	function _loop(itms) {
-		let oldL = ctx.length, sub;
-		for (let itm of itms) {
-			if ((sub = fn(ctx, itm)) && Array.isArray(sub)) _loop(sub);
-			ctx.length = oldL;
+export function walkAT(parent, items, bn, fn) {
+	function _loop(p, items) {
+		for (let item of items) {
+			let sub = fn(p, item), ss = item[bn];
+			if (sub && Array.isArray(ss)) _loop(sub, ss);
 		}
 	}
-	_loop(items);
+	_loop(parent, items);
 }
 /**
  * 查找基于数组的树
@@ -105,13 +105,16 @@ export function walkAT(items, fn) {
  * @returns {*} 如果返回undefined，表示没找到
  */
 export function findAT(items, bn, fn) {
-	for (let item of items) {
-		if (fn(item)) return item;
-		if (Array.isArray(item[bn])) {
-			let fnd = findAT(item[bn], bn, fn);
-			if (fnd !== undefined) return fnd;
+	function _loop(items) {
+		for (let item of items) {
+			if (fn(item)) return item;
+			if (Array.isArray(item[bn])) {
+				let fnd = _loop(item[bn]);
+				if (fnd !== undefined) return fnd;
+			}
 		}
 	}
+	return _loop(items);
 }
 /** nextId种子 */
 let _idSeed = 1000;

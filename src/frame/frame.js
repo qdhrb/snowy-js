@@ -1,4 +1,4 @@
-import Ele from '../ele/ele';
+import Ele, { cnew, getRegister } from '../ele/ele';
 import Page from './page';
 import { urlParam } from '../http/urlparam';
 
@@ -45,8 +45,11 @@ export default class Frame extends Ele {
 	showPage(pid, params, noPush) {
 		let p = this.pages[pid], oid = null;
 		if (!p) {
-			if (!Ele.getRegister(pid)) return;
-			p = Ele.cnew(pid);
+			if (!getRegister(pid)) {
+				console.error(`Page ${pid} undefined.`);
+				return;
+			}
+			p = cnew(pid);
 			this.addPage(p);
 		}
 		if (this.cpage) {

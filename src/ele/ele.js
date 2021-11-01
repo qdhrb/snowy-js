@@ -40,7 +40,9 @@ export default class Ele {
 			let typefn = this;
 			fn = t => new typefn(t);
 		}
-		EleLib.register(tag, fn);
+		for (let t of i2a(tag)) {
+			t && (_eleLib[t] = fn);
+		}
 	}
 	// edit ------------------------------------------------------------------------------------------------------------
 	/**
@@ -57,15 +59,6 @@ export default class Ele {
 		return this;
 	}
 	/**
-	 * 编辑
-	 * @param {function(e:this)} fn 子函数
-	 * @returns {this}
-	 */
-	edit(fn) {
-		fn(this);
-		return this;
-	}
-	/**
 	 * 清空子项
 	 * @returns {this}
 	 */
@@ -74,19 +67,37 @@ export default class Ele {
 		return this;
 	}
 	/**
-	 * 添加子项
-	 * @param  {...(Ele|Node|function(e:this):(Ele|Node|*)|*)} items
+	 * 编辑
+	 * @param {...(Ele|Node|string|function(e:this):(Ele|Node|*)|*)} items
 	 * @returns {this}
 	 */
-	append(...items) {
+	build(...items) {
 		for (let itm of items) {
-			if (typeof(itm) === 'function')
-				itm = itm(this);
-			if (itm instanceof Ele) {
+			if (typeof itm === 'function') itm = itm(this);
+			if (typeof itm === 'string') {
+				itm = EleLib.cnew(itm);
+				this.dom.appendChild(itm.dom);
+			}else if (itm instanceof Ele) {
 				this.dom.appendChild(itm.dom);
 			}else if (itm instanceof Node) {
 				this.dom.appendChild(itm);
 			}
+		}
+		return this;
+	}
+	/**
+	 * 添加子项
+	 * @param {String|Ele|Node|*} eTag tag或子项
+	 * @param {string|Object.<string,*>} [atc] css类或者属性集
+	 * @param {String} [content] 新建元素的内容（html）
+	 * @returns {this}
+	 */
+	append(eTag, atc, content) {
+		let chd = typeof(eTag) === 'string' ? EleLib.cnew(eTag, atc, content) :	eTag;
+		if (chd instanceof Ele) {
+			this.dom.appendChild(chd.dom);
+		}else if (chd instanceof Node) {
+			this.dom.appendChild(chd);
 		}
 		return this;
 	}
@@ -147,18 +158,19 @@ export default class Ele {
 	/**
 	 * 读取或设置属性
 	 * @param {string|Object.<string,String>} nObj 属性名或属性集合
-	 * @param {String|number} [v] 值
+	 * @param {String|number} [v] 值，如果为null或undefined，则删除该属性
 	 * @returns {this|String}
 	 */
 	attr(nObj, v) {
 		if (nObj instanceof Object) {
 			for (let name of Object.keys(nObj)) {
-				this.dom.setAttribute(name, nObj[name]);
+				v = nObj[name];
+				v != null && v != undefined ? this.dom.setAttribute(name, v) : this.dom.removeAttribute(name);
 			}
 			return this;
 		}
 		if (arguments.length >= 2) {
-			this.dom.setAttribute(nObj, v);
+			v != null && v != undefined ? this.dom.setAttribute(name, v) : this.dom.removeAttribute(name);
 			return this;
 		}
 		return this.dom.getAttribute(nObj);
@@ -380,13 +392,9 @@ export default class Ele {
 	 * @returns {(Ele|*)[]}
 	 */
 	queryAll(sel, fn) {
-		let list = this.dom.querySelectorAll(sel), rtn = [], rr;
-		if (typeof(fn) === 'function') {
-			for (let d of list) {
-				if (d && (rr = fn(d))) rtn.push(rr);
-			}
-		}else{
-			for (let d of list) rtn.push(new Ele(d));
+		let list = this.dom.querySelectorAll(sel), rtn = [], isFN = typeof(fn) === 'function';
+		for (let d of list) {
+			rtn.push(isFN ? fn(d) : new Ele(d));
 		}
 		return rtn;
 	}
@@ -427,6 +435,23 @@ export default class Ele {
 			}
 		}
 		return d && (typeof(fn) === 'function' ? fn(d) : new Ele(d));
+	}
+	/**
+	 * 查询所有符合条件的子节点
+	 * @param {string} sel 选择器
+	 * @param {function(dom:HTMLElement|*):(Ele|*)} [fn] 若有效，则查询有效时调用，并将返回值添加至返回数组
+	 * @returns {(Ele|*)[]}
+	 */
+	children(sel, fn) {
+		let ary = [], rtn = [], isFN = typeof(fn) === 'function';
+		// 先复制一遍，避免后续操作（删除）影响next
+		for (let d = this.dom.firstElementChild; d; d = d.nextElementSibling) {
+			if (!sel || d.matches(sel)) ary.push(d);
+		}
+		for (let d of ary) {
+			rtn.push(isFN ? fn(d) : new Ele(d));
+		}
+		return rtn;
 	}
 	/**
 	 * 查找子元素序号
@@ -543,46 +568,45 @@ const _nearby_map = {
 }
 
 // Ele lib -------------------------------------------------------------------------------------------------------------
+
 /**
- * Ele Libary
+ * @type {Object.<string,function():Ele|*>}
  */
-export class EleLib {
-	/**
-	 * @type {Object.<string,function():Ele|*>}
-	 */
-	static _all = {}
-	/**
-	 * 注册元素定义
-	 * @param {string|string[]} tags 标签
-	 * @param {function(tag:string):Ele|*} [fn] 创建函数；若为空，则使用当前类创建
-	 */
-	static register(tags, fn) {
-		for (let t of i2a(tags)) {
-			t && (this._all[t] = fn);
-		}
+let _eleLib = {};
+
+/**
+ * 注册元素定义
+ * @param {string|string[]} tag 标签
+ * @param {function(tag:string):Ele|*} [fn] 创建函数；若为空，则使用当前类创建
+ */
+export function register(tag, fn) {
+	for (let t of i2a(tag)) {
+		t && (_eleLib[t] = fn);
 	}
-	/**
-	 * 获取元素定义
-	 * @param {String} [tag] 标签
-	 * @returns {function(tag:string):Ele|*|Object.<string,function(tag:string):Ele|*>}
-	 */
-	static getRegister(tag) {
-		return this._all[tag];
+}
+
+/**
+ * 获取元素定义
+ * @param {String} [tag] 标签
+ * @returns {function(tag:string):Ele|*|Object.<string,function(tag:string):Ele|*>}
+ */
+export function getRegister(tag) {
+	return tag ? _eleLib[tag] : _eleLib;
+}
+
+/**
+ * 新建元素
+ * @param {string} tag 标签
+ * @param {string|Object.<string,*>} [atc] css类或者属性集
+ * @param {String} [content] 新建元素的内容（html）
+ * @returns {Ele|*}
+ */
+export function cnew(tag, atc, content) {
+	let fn = _eleLib[tag],
+		e = fn ? fn(tag) : new Ele(tag);
+	if (e) {
+		typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
+		e.content(content);
 	}
-	/**
-	 * 新建元素
-	 * @param {string} tag 标签
-	 * @param {string|Object.<string,*>} [atc] css类或者属性集
-	 * @param {String} [content] 新建元素的内容（html）
-	 * @returns {Ele|*}
-	 */
-	static cnew(tag, atc, content) {
-		let fn = this._all[tag],
-			e = fn ? fn(tag) : new Ele(tag);
-		if (e) {
-			typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
-			e.content(content);
-		}
-		return e;
-	}
+	return e;
 }
