@@ -11,3 +11,14 @@ export function urlParam(url, name, val) {
 	obj.searchParams.set(name, val);
 	return obj.toString();
 }
+
+/**
+ * 分析url协议
+ * @param {String} url URL
+ * @returns {String}
+ */
+export function urlProto(url) {
+	if (!url) return null;
+	let fnd = url.indexOf(':');
+	return fnd > 0 ? url.substr(0, fnd).toLowerCase() : null;
+}

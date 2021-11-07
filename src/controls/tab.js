@@ -1,25 +1,18 @@
-import Ele from "../ele/ele";
+import { cnew } from '../ele/Ele';
+import Control from "./Control";
 
-export default class Tab extends Ele {
+/** TAB */
+export default class Tab extends Control {
 	/**
 	 * 构造函数
 	 * @param {String|HTMLElement} [eTag] tag或者页面元素
 	 */
 	constructor(eTag) {
-		super(eTag||'div').clazz('__CSS_tab');
-		if (!this.getUL()) this.append('ul');
-
+		super(eTag, 'ul', '__CSS_tab');
 		// 事件：ul点击
-		this.getUL().onclick = evt => {
+		this.fc().onclick = evt => {
 
 		};
-	}
-	/**
-	 * 获取UL
-	 * @returns {HTMLElement|*}
-	 */
-	getUL() {
-		return this.dom.firstElementChild;
 	}
 	/**
 	 * 添加滚动按钮
@@ -34,13 +27,40 @@ export default class Tab extends Ele {
 		}
 		return this;
 	}
-	add() {
-
+	/**
+	 * 添加项
+	 * @param {String} v 值
+	 * @param {String} text 标题
+	 * @param {String} icon 图标
+	 * @param {boolean} closable 是否可以关闭
+	 */
+	add(v, text, icon, closable) {
+		let li = cnew('li').data('val', v);
+		icon && li.append('img');	// TODO
+		text && li.append('span', null, text);
+		closable && li.append('button', null, 'X');
+		this.fc().append(li);
+		return this;
 	}
-	find() {
-
+	/**
+	 * 按值查找
+	 * @param {String} v 值
+	 * @returns {Ele}
+	 */
+	find(v) {
+		return this.fc().child('[data-val=' + v + ']')
 	}
-	remove() {
-
+	/**
+	 * 按值删除
+	 * @param {String} v 值
+	 * @returns {boolean}
+	 */
+	remove(v) {
+		let li = this.find(v);
+		if (li) {
+			li.offline();
+			return true;
+		}
+		return false;
 	}
 }

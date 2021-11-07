@@ -523,6 +523,12 @@ const $S = (function () {
 			return this.dom.id;
 		}
 		/**
+		 * 设置属性
+		 */
+		static setAttr(dom, name, v) {
+			v != null && v != undefined ? dom.setAttribute(name, v) : dom.removeAttribute(name);
+		}
+		/**
 		 * 读取或设置属性
 		 * @param {string|Object.<string,String>} nObj 属性名或属性集合
 		 * @param {String|number} [v] 值，如果为null或undefined，则删除该属性
@@ -530,17 +536,26 @@ const $S = (function () {
 		 */
 		attr(nObj, v) {
 			if (nObj instanceof Object) {
-				for (let name of Object.keys(nObj)) {
-					v = nObj[name];
-					v != null && v != undefined ? this.dom.setAttribute(name, v) : this.dom.removeAttribute(name);
-				}
+				for (let name of Object.keys(nObj)) Ele.setAttr(this.dom, name, nObj[name]);
 				return this;
 			}
 			if (arguments.length >= 2) {
-				v != null && v != undefined ? this.dom.setAttribute(name, v) : this.dom.removeAttribute(name);
-				return this;
+				Ele.setAttr(this.dom, nObj, v); return this;
 			}
 			return this.dom.getAttribute(nObj);
+		}
+		/**
+		 * 读取或设置数据值
+		 * @param {String} name 数据名
+		 * @param {String} v 值
+		 * @returns {this|String}
+		 */
+		data(name, v) {
+			name = 'data-' + name;
+			if (arguments.length >= 2) {
+				Ele.setAttr(this.dom, name, v); return this;
+			}
+			return this.dom.getAttribute(name);
 		}
 		/**
 		 * 读取或设置内容
@@ -1085,12 +1100,14 @@ const $S = (function () {
 
 	/**
 	 * 初始化-frame
-	 * @param {Frame|*} root 根节点
+	 * @param {Frame|String|*} root 根节点
 	 * @returns {Frame|*}
 	 */
 	function init(root) {
+		if (typeof(root) === 'string') root = cnew(root);
+		if (!root instanceof Frame) throw 'Need frame';
 		this.root = root;
-		if (root instanceof Frame) Frame.current = root;
+		Frame.current = root;
 		if (root.isOffline()) root.appendTo(document.body);
 		return root;
 	}

@@ -1,4 +1,4 @@
-import Ele from '../ele/ele';
+import Ele from '../ele/Ele';
 import {nextId} from '../utils/utils';
 
 /** Page */

@@ -1,5 +1,5 @@
-import Control from "./control";
-import { cnew } from "../ele/ele";
+import Control from "./Control";
+import { cnew } from "../ele/Ele";
 
 /**
  * @typedef MenuItem

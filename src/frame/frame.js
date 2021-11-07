@@ -1,6 +1,6 @@
-import Ele, { cnew, getRegister } from '../ele/ele';
-import Page from './page';
-import { urlParam } from '../http/urlparam';
+import Ele, { cnew, getRegister } from '../ele/Ele';
+import Page from './Page';
+import { urlParam } from '../http/url';
 
 /** Frame */
 export default class Frame extends Ele {

@@ -3,13 +3,13 @@ import {} from './global/unhandled';
 import { i2a, rand, fix, split, clone, walkAT, findAT, getItem, setItem, nextId, lastId } from './utils/utils';
 
 import config from './config';
-import { urlParam } from './http/urlparam';
+import { urlParam } from './http/url';
 import { reqGet, reqPost, reqPut, reqDelete } from './http/request';
-import { loadScripts } from './http/loadscript';
+import { loadScripts } from './http/loadScript';
 
-import Ele, { cnew, register, getRegister} from './ele/ele';
-import Frame from './frame/frame';
-import Page from './frame/page';
+import Ele, { cnew, register, getRegister} from './ele/Ele';
+import Frame from './frame/Frame';
+import Page from './frame/Page';
 import { init } from './frame/init';
 
 // 是否定义global的cnew？

@@ -1,4 +1,4 @@
-import Ele from "../ele/ele";
+import Ele from "../ele/Ele";
 
 /**
  * 控件；所有控件外面包着一层div或其他容器
