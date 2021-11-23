@@ -438,33 +438,17 @@ const $S = (function () {
 		 * @param {...(Ele|Node|string|function(e:this):(Ele|Node|*)|*)} items
 		 * @returns {this}
 		 */
-		build(...items) {
+		append(...items) {
 			for (let itm of items) {
 				if (typeof itm === 'function') itm = itm(this);
 				if (typeof itm === 'string') {
-					itm = EleLib.cnew(itm);
+					itm = cnew(itm);
 					this.dom.appendChild(itm.dom);
 				}else if (itm instanceof Ele) {
 					this.dom.appendChild(itm.dom);
 				}else if (itm instanceof Node) {
 					this.dom.appendChild(itm);
 				}
-			}
-			return this;
-		}
-		/**
-		 * 添加子项
-		 * @param {String|Ele|Node|*} eTag tag或子项
-		 * @param {string|Object.<string,*>} [atc] css类或者属性集
-		 * @param {String} [content] 新建元素的内容（html）
-		 * @returns {this}
-		 */
-		append(eTag, atc, content) {
-			let chd = typeof(eTag) === 'string' ? EleLib.cnew(eTag, atc, content) :	eTag;
-			if (chd instanceof Ele) {
-				this.dom.appendChild(chd.dom);
-			}else if (chd instanceof Node) {
-				this.dom.appendChild(chd);
 			}
 			return this;
 		}
@@ -995,8 +979,8 @@ const $S = (function () {
 
 	/** Page */
 	class Page extends Ele {
-		constructor(eTag) {
-			super(eTag).clazz('snowy_page');
+		constructor() {
+			super('div').clazz('snowy_page');
 			this._need_init = true;
 			this.id(nextId('page'));
 		}
@@ -1027,8 +1011,8 @@ const $S = (function () {
 
 	/** Frame */
 	class Frame extends Ele {
-		constructor(eTag) {
-			super(eTag||'div').clazz('snowy_frame');
+		constructor() {
+			super('div').clazz('snowy_frame');
 			/** @type {Ele} */
 			this.sheet = null;
 			/** @type {Object.<string,Page>} */
@@ -1038,7 +1022,7 @@ const $S = (function () {
 		}
 		/**
 		 * 当前frame；一般一个html中只有一个frame
-		 * @type {Frame}
+		 * @type {Frame|*}
 		 */
 		static current = null;
 		/**

@@ -71,7 +71,7 @@ export default class Ele {
 	 * @param {...(Ele|Node|string|function(e:this):(Ele|Node|*)|*)} items
 	 * @returns {this}
 	 */
-	build(...items) {
+	append(...items) {
 		for (let itm of items) {
 			if (typeof itm === 'function') itm = itm(this);
 			if (typeof itm === 'string') {
@@ -82,22 +82,6 @@ export default class Ele {
 			}else if (itm instanceof Node) {
 				this.dom.appendChild(itm);
 			}
-		}
-		return this;
-	}
-	/**
-	 * 添加子项
-	 * @param {String|Ele|Node|*} eTag tag或子项
-	 * @param {string|Object.<string,*>} [atc] css类或者属性集
-	 * @param {String} [content] 新建元素的内容（html）
-	 * @returns {this}
-	 */
-	append(eTag, atc, content) {
-		let chd = typeof(eTag) === 'string' ? cnew(eTag, atc, content) :	eTag;
-		if (chd instanceof Ele) {
-			this.dom.appendChild(chd.dom);
-		}else if (chd instanceof Node) {
-			this.dom.appendChild(chd);
 		}
 		return this;
 	}

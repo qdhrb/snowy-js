@@ -1,7 +1,7 @@
 class SvgFrame extends $S.Frame {
 	constructor() {
 		super('div');
-		this.build(
+		this.append(
 			cnew('page.header'),
 			cnew('svg.panel'),
 		);
