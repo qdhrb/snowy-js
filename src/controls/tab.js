@@ -5,10 +5,9 @@ import Control from "./Control";
 export default class Tab extends Control {
 	/**
 	 * 构造函数
-	 * @param {String|HTMLElement} [eTag] tag或者页面元素
 	 */
-	constructor(eTag) {
-		super(eTag, 'ul', '__CSS_tab');
+	constructor() {
+		super('__CSS_tab', 'ul');
 		// 事件：ul点击
 		this.fc().onclick = evt => {
 

@@ -6,19 +6,13 @@ import Ele from "../ele/Ele";
 export default class Control extends Ele {
 	/**
 	 * 构造函数
-	 * @param {String|HTMLElement} eTag tag或者页面元素，如果无效，则使用div
-	 * @param {String} firstTag 第一个子元素tag
 	 * @param {String} baseClz 控件的基础css类
+	 * @param {String} firstTag 第一个子元素tag
 	 */
-	constructor(eTag, firstTag, baseClz) {
-		super(eTag||'div').clazz(baseClz);
+	constructor(baseClz, firstTag) {
+		super('div').clazz(baseClz);
 		if (firstTag) {
-			firstTag = firstTag.toUpperCase();
-			if (this.dom.firstElementChild) {
-				if (this.dom.firstElementChild.tagName != firstTag) throw `Invalid control tag, need ${firstTag}`;
-			}else{
-				this.dom.appendChild(document.createElement(firstTag));
-			}
+			this.dom.appendChild(document.createElement(firstTag));
 		}
 	}
 	/**

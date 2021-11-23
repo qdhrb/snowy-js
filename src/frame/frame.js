@@ -4,8 +4,8 @@ import { urlParam } from '../http/url';
 
 /** Frame */
 export default class Frame extends Ele {
-	constructor(eTag) {
-		super(eTag);
+	constructor() {
+		super('div').clazz('__CSS_frame');
 		/** @type {Ele} */
 		this.sheet = null;
 		/** @type {Object.<string,Page>} */
@@ -13,6 +13,11 @@ export default class Frame extends Ele {
 		/** @type {Page} */
 		this.cpage = null;
 	}
+	/**
+	 * 当前frame；一般一个html中只有一个frame
+	 * @type {Frame|*}
+	 */
+	static current = null;
 	/**
 	 * 添加页面
 	 * @param {Page|*} page 页面
@@ -37,6 +42,15 @@ export default class Frame extends Ele {
 		return p;
 	}
 	/**
+	 * 删除所有页面
+	 */
+	removeAllPage() {
+		for (let pid of Object.keys(this.pages)) {
+			this.pages[pid].offline();
+		}
+		this.pages = {};
+	}
+	/**
 	 * 显示页面
 	 * @param {string} pid 页面id
 	 * @param [params] 显示参数
@@ -45,6 +59,7 @@ export default class Frame extends Ele {
 	showPage(pid, params, noPush) {
 		let p = this.pages[pid], oid = null;
 		if (!p) {
+			if (!this.sheet) return;
 			if (!getRegister(pid)) {
 				console.error(`Page ${pid} undefined.`);
 				return;
@@ -67,10 +82,5 @@ export default class Frame extends Ele {
 		}, 0);
 	}
 }
-/**
- * 当前frame；一般一个html中只有一个frame
- * @type {Frame}
- */
-Frame.current = null;
 // 注册
 Frame.register('frame');

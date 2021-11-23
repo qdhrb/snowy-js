@@ -10,7 +10,6 @@ import { loadScripts } from './http/loadScript';
 import Ele, { cnew, register, getRegister} from './ele/Ele';
 import Frame from './frame/Frame';
 import Page from './frame/Page';
-import { init } from './frame/init';
 
 // 是否定义global的cnew？
 if (__CNEW) window.cnew = cnew;
@@ -21,7 +20,21 @@ const app = {
 	config,
 	urlParam, reqGet, reqPost, reqPut, reqDelete, loadScripts,
 
-	init, cnew, register, getRegister,
+	cnew, register, getRegister,
 	Ele, Frame, Page,
+
+	/**
+	 * 初始化-frame
+	 * @param {Frame|String|*} frame
+	 * @returns {Frame|*}
+	 */
+	init(frame) {
+		(typeof(frame) === 'string') && (frame = cnew(frame));
+		if (!frame instanceof Frame) throw 'Need frame';
+		this.frame = frame;
+		Frame.current = frame;
+		if (frame.isOffline()) frame.appendTo(document.body);
+		return frame;
+	}
 };
 export default app;

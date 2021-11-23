@@ -564,7 +564,7 @@ const $S = (function () {
 		 */
 		content(v) {
 			if (arguments.length >= 1) {
-				this.dom.innerHTML = v; return this;
+				this.dom.innerHTML = (v === undefined || v === null) ? '' : v; return this;
 			}
 			return this.dom.innerHTML;
 		}
@@ -985,10 +985,10 @@ const $S = (function () {
 	 */
 	function cnew(tag, atc, content) {
 		let fn = _eleLib[tag],
-			e = fn ? fn(tag) : new Ele(tag);
+			e = fn ? fn() : new Ele(tag);
 		if (e) {
 			typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
-			e.content(content);
+			content && e.content(content);
 		}
 		return e;
 	}
@@ -1028,7 +1028,7 @@ const $S = (function () {
 	/** Frame */
 	class Frame extends Ele {
 		constructor(eTag) {
-			super(eTag);
+			super(eTag||'div').clazz('snowy_frame');
 			/** @type {Ele} */
 			this.sheet = null;
 			/** @type {Object.<string,Page>} */
@@ -1036,6 +1036,11 @@ const $S = (function () {
 			/** @type {Page} */
 			this.cpage = null;
 		}
+		/**
+		 * 当前frame；一般一个html中只有一个frame
+		 * @type {Frame}
+		 */
+		static current = null;
 		/**
 		 * 添加页面
 		 * @param {Page|*} page 页面
@@ -1060,6 +1065,15 @@ const $S = (function () {
 			return p;
 		}
 		/**
+		 * 删除所有页面
+		 */
+		removeAllPage() {
+			for (let pid of Object.keys(this.pages)) {
+				this.pages[pid].offline();
+			}
+			this.pages = {};
+		}
+		/**
 		 * 显示页面
 		 * @param {string} pid 页面id
 		 * @param [params] 显示参数
@@ -1068,6 +1082,7 @@ const $S = (function () {
 		showPage(pid, params, noPush) {
 			let p = this.pages[pid], oid = null;
 			if (!p) {
+				if (!this.sheet) return;
 				if (!getRegister(pid)) {
 					console.error(`Page ${pid} undefined.`);
 					return;
@@ -1090,27 +1105,8 @@ const $S = (function () {
 			}, 0);
 		}
 	}
-	/**
-	 * 当前frame；一般一个html中只有一个frame
-	 * @type {Frame}
-	 */
-	Frame.current = null;
 	// 注册
 	Frame.register('frame');
-
-	/**
-	 * 初始化-frame
-	 * @param {Frame|String|*} root 根节点
-	 * @returns {Frame|*}
-	 */
-	function init(root) {
-		if (typeof(root) === 'string') root = cnew(root);
-		if (!root instanceof Frame) throw 'Need frame';
-		this.root = root;
-		Frame.current = root;
-		if (root.isOffline()) root.appendTo(document.body);
-		return root;
-	}
 
 	// 是否定义global的cnew？
 	window.cnew = cnew;
@@ -1121,8 +1117,22 @@ const $S = (function () {
 		config,
 		urlParam, reqGet, reqPost, reqPut, reqDelete, loadScripts,
 
-		init, cnew, register, getRegister,
+		cnew, register, getRegister,
 		Ele, Frame, Page,
+
+		/**
+		 * 初始化-frame
+		 * @param {Frame|String|*} frame
+		 * @returns {Frame|*}
+		 */
+		init(frame) {
+			(typeof(frame) === 'string') && (frame = cnew(frame));
+			if (!frame instanceof Frame) throw 'Need frame';
+			this.frame = frame;
+			Frame.current = frame;
+			if (frame.isOffline()) frame.appendTo(document.body);
+			return frame;
+		}
 	};
 
 	return app;

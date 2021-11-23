@@ -14,10 +14,9 @@ import { cnew } from "../ele/Ele";
 export default class Menu extends Control {
 	/**
 	 * 构造函数
-	 * @param {String|HTMLElement} [eTag] tag或者页面元素
 	 */
-	constructor(eTag) {
-		super(eTag, 'ul', '__CSS_menu');
+	constructor() {
+		super('__CSS_menu', 'ul');
 	}
 	/**
 	 * 添加子项
@@ -55,7 +54,7 @@ export default class Menu extends Control {
 	 * @returns {Ele}
 	 */
 	find(id) {
-		return this.fc().query('[data-id='+id+']');
+		return this.query('[data-id='+id+']');
 	}
 	/**
 	 * 删除菜单项

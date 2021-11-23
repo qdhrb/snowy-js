@@ -75,7 +75,7 @@ export default class Ele {
 		for (let itm of items) {
 			if (typeof itm === 'function') itm = itm(this);
 			if (typeof itm === 'string') {
-				itm = EleLib.cnew(itm);
+				itm = cnew(itm);
 				this.dom.appendChild(itm.dom);
 			}else if (itm instanceof Ele) {
 				this.dom.appendChild(itm.dom);
@@ -93,7 +93,7 @@ export default class Ele {
 	 * @returns {this}
 	 */
 	append(eTag, atc, content) {
-		let chd = typeof(eTag) === 'string' ? EleLib.cnew(eTag, atc, content) :	eTag;
+		let chd = typeof(eTag) === 'string' ? cnew(eTag, atc, content) :	eTag;
 		if (chd instanceof Ele) {
 			this.dom.appendChild(chd.dom);
 		}else if (chd instanceof Node) {
@@ -197,7 +197,7 @@ export default class Ele {
 	 */
 	content(v) {
 		if (arguments.length >= 1) {
-			this.dom.innerHTML = v; return this;
+			this.dom.innerHTML = (v === undefined || v === null) ? '' : v; return this;
 		}
 		return this.dom.innerHTML;
 	}
@@ -618,10 +618,10 @@ export function getRegister(tag) {
  */
 export function cnew(tag, atc, content) {
 	let fn = _eleLib[tag],
-		e = fn ? fn(tag) : new Ele(tag);
+		e = fn ? fn() : new Ele(tag);
 	if (e) {
 		typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
-		e.content(content);
+		content && e.content(content);
 	}
 	return e;
 }
