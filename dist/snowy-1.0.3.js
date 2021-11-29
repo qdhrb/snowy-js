@@ -1092,6 +1092,106 @@ const $S = (function () {
 	// 注册
 	Frame.register('frame');
 
+	/**
+	 * 控件；所有控件外面包着一层div或其他容器
+	 */
+	class Control extends Ele {
+		/**
+		 * 构造函数
+		 * @param {String} baseClz 控件的基础css类
+		 * @param {String} firstTag 第一个子元素tag
+		 */
+		constructor(baseClz, firstTag) {
+			super('div').clazz(baseClz);
+			if (firstTag) {
+				this.dom.appendChild(document.createElement(firstTag));
+			}
+		}
+		/**
+		 * 功能性子元素
+		 * @returns {Ele}
+		 */
+		fc() {
+			return new Ele(this.dom.firstElementChild);
+		}
+		/**
+		 * 控件的内部元素
+		 * @returns {HTMLElement|*}
+		 */
+		idom() {
+			return this.dom.firstElementChild;
+		}
+	}
+
+	/**
+	 * @typedef MenuItem
+	 * @property {String} id 菜单id
+	 * @property {String} text 菜单标题
+	 * @property {String} [icon] 菜单图标
+	 * @property {String|function} [click] 点击事件
+	 * @property {MenuItem[]} [children] 子菜单
+	 */
+
+	/** 菜单 */
+	class Menu extends Control {
+		/**
+		 * 构造函数
+		 */
+		constructor() {
+			super('snowy_menu', 'ul');
+		}
+		/**
+		 * 添加子项
+		 * @param {String} parentId 父节点id，若为空，则添加至根部
+		 * @param {...MenuItem} items 子项
+		 * @returns {this}
+		 */
+		add(parentId, ...items) {
+			let parent = parentId ? this.find(parentId) : this;
+			Menu._buildItem(parent.child('ul'), items);
+			return this;
+		}
+		/**
+		 * 组织菜单项
+		 * @param {Ele} ul 父列表
+		 * @param {MenuItem} item 菜单项
+		 */
+		static _buildItem(ul, item) {
+			let li = cnew('li').append(cnew('div').append(div => {
+				div.attr('data-id', item.id);
+				item.icon && div.append('img');	// TODO: 未完成
+				typeof(item.click) === 'function' && div.on('click', item.click);
+				typeof(item.click) === 'string' && div.attr('onclick', item.click);
+				item.text && div.append(cnew('span').text(item.text));
+			}));
+			if (Array.isArray(item.children)) {
+				let ul2 = cnew('ul').appendTo(li);
+				for (let chd of item.children) this._buildItem(ul2, chd);
+			}
+			ul.append(li);
+		}
+		/**
+		 * 按id查询菜单项
+		 * @param {String} id 菜单id
+		 * @returns {Ele}
+		 */
+		find(id) {
+			return this.query('[data-id='+id+']');
+		}
+		/**
+		 * 删除菜单项
+		 * @param {String} id 菜单id
+		 * @returns {boolean}
+		 */
+		remove(id) {
+			let fnd = this.find(id);
+			if (!fnd) return false;
+			fnd.offline();
+			return true;
+		}
+	}
+	Menu.register('menu');
+
 	// 是否定义global的cnew？
 	window.cnew = cnew;
 
@@ -1103,6 +1203,7 @@ const $S = (function () {
 
 		cnew, register, getRegister,
 		Ele, Frame, Page,
+		Control, Menu,
 
 		/**
 		 * 初始化-frame
@@ -1112,8 +1213,7 @@ const $S = (function () {
 		init(frame) {
 			(typeof(frame) === 'string') && (frame = cnew(frame));
 			if (!frame instanceof Frame) throw 'Need frame';
-			this.frame = frame;
-			Frame.current = frame;
+			this.frame = Frame.current = frame;
 			if (frame.isOffline()) frame.appendTo(document.body);
 			return frame;
 		}

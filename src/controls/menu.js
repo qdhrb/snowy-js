@@ -35,12 +35,12 @@ export default class Menu extends Control {
 	 * @param {MenuItem} item 菜单项
 	 */
 	static _buildItem(ul, item) {
-		let li = cnew('li').append(cnew('div').append(div => {
+		let li = cnew('li').append(cnew('div').sub(div => {
 			div.attr('data-id', item.id);
 			item.icon && div.append('img');	// TODO: 未完成
 			typeof(item.click) === 'function' && div.on('click', item.click);
 			typeof(item.click) === 'string' && div.attr('onclick', item.click);
-			item.text && div.append(cnew('span').text(item.text));
+			item.text && div.append('span', null, item.text);
 		}));
 		if (Array.isArray(item.children)) {
 			let ul2 = cnew('ul').appendTo(li);

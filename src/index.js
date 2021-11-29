@@ -11,6 +11,9 @@ import Ele, { cnew, register, getRegister} from './ele/Ele';
 import Frame from './frame/Frame';
 import Page from './frame/Page';
 
+import Control from './controls/Control';
+import Menu from './controls/Menu';
+
 // 是否定义global的cnew？
 if (__CNEW) window.cnew = cnew;
 
@@ -22,6 +25,7 @@ const app = {
 
 	cnew, register, getRegister,
 	Ele, Frame, Page,
+	Control, Menu,
 
 	/**
 	 * 初始化-frame
@@ -31,8 +35,7 @@ const app = {
 	init(frame) {
 		(typeof(frame) === 'string') && (frame = cnew(frame));
 		if (!frame instanceof Frame) throw 'Need frame';
-		this.frame = frame;
-		Frame.current = frame;
+		this.frame = Frame.current = frame;
 		if (frame.isOffline()) frame.appendTo(document.body);
 		return frame;
 	}

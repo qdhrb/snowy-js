@@ -7,14 +7,16 @@ export default class Ele {
 	/**
 	 * 构造函数
 	 * @param {String|HTMLElement} [eTag] tag或者页面元素
+	 * @param {String} [clazz] css类
 	 */
-	constructor(eTag) {
+	constructor(eTag, clazz) {
 		/**
 		 * @type {HTMLElement|null}
 		 */
 		this.dom = typeof(eTag) === 'string' ? document.createElement(eTag)
-			 : eTag instanceof HTMLElement ? eTag
-			 : null;
+			: eTag instanceof HTMLElement ? eTag
+			: null;
+		clazz && this.dom && (this.dom.className = clazz);
 	}
 	/**
 	 * 是否有效
@@ -63,25 +65,53 @@ export default class Ele {
 	 * @returns {this}
 	 */
 	empty() {
-		this.dom && (this.dom.innerHTML = '');
+		this.dom && this.dom.firstChild && (this.dom.innerHTML = '');
 		return this;
 	}
 	/**
-	 * 编辑
-	 * @param {...(Ele|Node|string|function(e:this):(Ele|Node|*)|*)} items
+	 * 子处理
+	 * @param {function(e:Ele|*)} fn 处理函数
 	 * @returns {this}
 	 */
-	append(...items) {
-		for (let itm of items) {
-			if (typeof itm === 'function') itm = itm(this);
-			if (typeof itm === 'string') {
-				itm = cnew(itm);
-				this.dom.appendChild(itm.dom);
-			}else if (itm instanceof Ele) {
-				this.dom.appendChild(itm.dom);
-			}else if (itm instanceof Node) {
-				this.dom.appendChild(itm);
+	sub(fn) {
+		fn && fn(this);
+		return this;
+	}
+	/**
+	 * 设置内容子项（先清空，后添加）
+	 * @param  {...(String|Ele|Node|*)} ary 子项
+	 * @returns {this}
+	 */
+	content(...ary) {
+		this.empty();
+		for (let chd of ary) {
+			if (chd instanceof Ele) {
+				this.dom.appendChild(chd.dom);
+			}else if (chd instanceof Node) {
+				this.dom.appendChild(chd);
+			}else if (typeof(chd) === 'string') {
+				this.dom.appendChild(document.createTextNode(chd));
 			}
+		}
+		return this;
+	}
+	/**
+	 * 添加子项
+	 * @param {string|Ele|HTMLElement|*} eTag 标签或者元素
+	 * @param {string|function(e:Ele|*)} [clzFn] css类或者子处理函数
+	 * @param {String} [text] 文本内容；当clzFn是函数时有用
+	 * @returns {this}
+	 */
+	append(eTag, clzFn, text) {
+		let e = eTag instanceof Ele ? eTag : eTag instanceof HTMlElement ? new Ele(eTag) : cnew(eTag);
+		if (e) {
+			if (typeof(clzFn) === 'function') {
+				clzFn(e);
+			}else{
+				clzFn && e.mclazz(clzFn);
+				text && e.text(text);
+			}
+			this.dom.appendChild(e.dom);
 		}
 		return this;
 	}
@@ -121,7 +151,7 @@ export default class Ele {
 		pp && pp.removeChild(this.dom);
 		return this;
 	}
-	// attributes & content --------------------------------------------------------------------------------------------
+	// attributes & html/text ------------------------------------------------------------------------------------------
 	/**
 	 * 标签名
 	 * @returns {string}
@@ -179,7 +209,7 @@ export default class Ele {
 	 * @param {string} v 内容字符串
 	 * @returns {this|string}
 	 */
-	content(v) {
+	html(v) {
 		if (arguments.length >= 1) {
 			this.dom.innerHTML = (v === undefined || v === null) ? '' : v; return this;
 		}
@@ -276,19 +306,23 @@ export default class Ele {
 	}
 	/**
 	 * 获取或修改css类
-	 * @param {string|string[]} [add] 添加的类
-	 * @param {string|string[]} [remove] 删除的类
+	 * @param {string} [add] 添加的类
+	 * @param {string} [remove] 删除的类
 	 * @returns {this}
 	 */
 	mclazz(add, remove) {
 		let list = this.dom.classList;
-		if (add) {
-			for (let c of i2a(add)) list.add(c);
-		}
-		if (remove) {
-			for (let c of i2a(remove)) list.remove(c);
-		}
+		for (let c of Ele.splitClazz(add)) list.add(c);
+		for (let c of Ele.splitClazz(remove)) list.remove(c);
 		return this;
+	}
+	/**
+	 * 分割转换css类
+	 * @param {String} clz css类
+	 * @returns {string[]}
+	 */
+	static splitClazz(clz) {
+		return clz ? clz.match(/[^ \t,]/g) : [];
 	}
 	/**
 	 * 检查是否拥有css类
@@ -596,16 +630,12 @@ export function getRegister(tag) {
 /**
  * 新建元素
  * @param {string} tag 标签
- * @param {string|Object.<string,*>} [atc] css类或者属性集
- * @param {String} [content] 新建元素的内容（html）
+ * @param {string} [clazz] css类
  * @returns {Ele|*}
  */
-export function cnew(tag, atc, content) {
+export function cnew(tag, clazz) {
 	let fn = _eleLib[tag],
 		e = fn ? fn() : new Ele(tag);
-	if (e) {
-		typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
-		content && e.content(content);
-	}
+	e && clazz && e.mclazz(clazz);
 	return e;
 }

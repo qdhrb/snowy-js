@@ -37,7 +37,7 @@ export default class Tab extends Control {
 		let li = cnew('li').data('val', v);
 		icon && li.append('img');	// TODO
 		text && li.append('span', null, text);
-		closable && li.append(cnew('button').text('X'));
+		closable && li.append('button', null, 'X');
 		this.fc().append(li);
 		return this;
 	}

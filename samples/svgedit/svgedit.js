@@ -1,17 +1,40 @@
 class SvgFrame extends $S.Frame {
 	constructor() {
-		super('div');
-		this.append(
-			cnew('page.header'),
-			cnew('svg.panel'),
+		super();
+		this.content(
+			cnew('header').append(
+				cnew('span').text(document.title),
+				this.menu = cnew('menu')
+			),
+			this.lib = new SvgLibPanel(),
+			this.details = new SvgDetails(),
+			this.preview = new SvgPreview(),
+			this.editor = new SvgEditor()
 		);
 	}
 }
 SvgFrame.register('svg.frame');
 
-class SvgPanel extends $S.Ele {
+class SvgLibPanel extends $S.Ele {
 	constructor() {
 		super('div');
 	}
 }
-SvgPanel.register('svg.panel');
+
+class SvgDetails extends $S.Ele {
+	constructor() {
+		super('div');
+	}
+}
+
+class SvgPreview extends $S.Ele {
+	constructor() {
+		super('div');
+	}
+}
+
+class SvgEditor extends $S.Ele {
+	constructor() {
+		super('div')
+	}
+}

@@ -5,7 +5,7 @@ import { urlParam } from '../http/url';
 /** Frame */
 export default class Frame extends Ele {
 	constructor() {
-		super('div').clazz('__CSS_frame');
+		super('div', '__CSS_frame');
 		/** @type {Ele} */
 		this.sheet = null;
 		/** @type {Object.<string,Page>} */

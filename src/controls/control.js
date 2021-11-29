@@ -10,7 +10,7 @@ export default class Control extends Ele {
 	 * @param {String} firstTag 第一个子元素tag
 	 */
 	constructor(baseClz, firstTag) {
-		super('div').clazz(baseClz);
+		super('div', baseClz);
 		if (firstTag) {
 			this.dom.appendChild(document.createElement(firstTag));
 		}

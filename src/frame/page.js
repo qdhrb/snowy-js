@@ -4,7 +4,7 @@ import {nextId} from '../utils/utils';
 /** Page */
 export default class Page extends Ele {
 	constructor() {
-		super('div').clazz('__CSS_page');
+		super('div', '__CSS_page');
 		this._need_init = true;
 		this.id(nextId('page'));
 	}
