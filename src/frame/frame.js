@@ -5,7 +5,7 @@ import { urlParam } from '../http/url';
 /** Frame */
 export default class Frame extends Ele {
 	constructor() {
-		super('div', '__CSS_frame');
+		super('div', '__CSS-frame');
 		/** @type {Ele} */
 		this.sheet = null;
 		/** @type {Object.<string,Page>} */
@@ -24,9 +24,14 @@ export default class Frame extends Ele {
 	 * @returns {Page|*}
 	 */
 	addPage(page) {
-		if (!this.sheet || !page) return null;
+		if (!page) return null;
+		if (!this.sheet) {
+			this.sheet = this.query('.__CSS-sheet');
+			if (!this.sheet) throw 'No sheet';
+		}
 		this.sheet.append(page);
 		this.pages[page.id()] = page;
+		page.onInit();
 		return page;
 	}
 	/**
@@ -57,7 +62,7 @@ export default class Frame extends Ele {
 	 * @param {boolean} [noPush] 不添加历史状态
 	 */
 	showPage(pid, params, noPush) {
-		let p = this.pages[pid], oid = null;
+		let p = this.pages[pid], old = this.cpage;
 		if (!p) {
 			if (!this.sheet) return;
 			if (!getRegister(pid)) {
@@ -67,18 +72,19 @@ export default class Frame extends Ele {
 			p = cnew(pid);
 			this.addPage(p);
 		}
-		if (this.cpage) {
-			oid = this.cpage.id();
-			this.cpage.hide();
+		if (old) {
+			old.hide();
+			old.onHide();
 		}
 		this.cpage = p;
 		p.show(params);
+		p.onShow();
 		if (!noPush && (!history.state || history.state.pid != p.pid)) {
 			let url = urlParam(null, 'p', pid);
 			history.pushState({pid:p.pid}, document.title + '-' + p.title, url);
 		}
-		this.dispatch('__EVENT_page_changed', {
-			oldPid: oid, pid: p.id()
+		this.dispatch('change', {
+			oldPid: old && old.id(), pid: p.id()
 		}, 0);
 	}
 }

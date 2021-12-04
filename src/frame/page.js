@@ -4,30 +4,26 @@ import {nextId} from '../utils/utils';
 /** Page */
 export default class Page extends Ele {
 	constructor() {
-		super('div', '__CSS_page');
-		this._need_init = true;
+		super('div', '__CSS-page');
 		this.id(nextId('page'));
 	}
 	/**
-	 * 显示
+	 * 初始化
 	 * @override
-	 * @param {*} [params] 参数
 	 */
-	show(params) {
-		super.show(params);
-		if (this._need_init) {
-			delete this._need_init;
-			this.dispatch('__EVENT_page_init', null, 0);
-		}
-		this.dispatch('__EVENT_page_show', null, 0);
+	onInit() {
 	}
 	/**
-	 * 隐藏
+	 * 页面显示
 	 * @override
 	 */
-	hide() {
-		super.hide();
-		this.dispatch('__EVENT_page_hide', null, 0);
+	onShow() {
+	}
+	/**
+	 * 页面隐藏
+	 * @override
+	 */
+	onHide() {
 	}
 }
 // 注册：默认页面

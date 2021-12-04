@@ -1,8 +1,8 @@
-class SvgFrame extends $S.Frame {
+class SvgFrame extends snowy.Frame {
 	constructor() {
 		super();
 		this.content(
-			cnew('header').append(
+			cnew('header').content(
 				cnew('span').text(document.title),
 				this.menu = cnew('menu')
 			),
@@ -15,25 +15,25 @@ class SvgFrame extends $S.Frame {
 }
 SvgFrame.register('svg.frame');
 
-class SvgLibPanel extends $S.Ele {
+class SvgLibPanel extends snowy.Ele {
 	constructor() {
 		super('div');
 	}
 }
 
-class SvgDetails extends $S.Ele {
+class SvgDetails extends snowy.Ele {
 	constructor() {
 		super('div');
 	}
 }
 
-class SvgPreview extends $S.Ele {
+class SvgPreview extends snowy.Ele {
 	constructor() {
 		super('div');
 	}
 }
 
-class SvgEditor extends $S.Ele {
+class SvgEditor extends snowy.Ele {
 	constructor() {
 		super('div')
 	}

@@ -16,7 +16,7 @@ export default class Menu extends Control {
 	 * 构造函数
 	 */
 	constructor() {
-		super('__CSS_menu', 'ul');
+		super('__CSS-menu', 'ul');
 	}
 	/**
 	 * 添加子项

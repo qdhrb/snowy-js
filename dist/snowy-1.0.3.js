@@ -3,7 +3,7 @@
  * @Version 1.0.3
  * @Author HanRubing <qdhrb@sina.com>
 */
-const $S = (function () {
+const snowy = (function () {
 	'use strict';
 
 	if (!String.prototype.decode) {
@@ -374,14 +374,16 @@ const $S = (function () {
 		/**
 		 * 构造函数
 		 * @param {String|HTMLElement} [eTag] tag或者页面元素
+		 * @param {String} [clazz] css类
 		 */
-		constructor(eTag) {
+		constructor(eTag, clazz) {
 			/**
 			 * @type {HTMLElement|null}
 			 */
 			this.dom = typeof(eTag) === 'string' ? document.createElement(eTag)
-				 : eTag instanceof HTMLElement ? eTag
-				 : null;
+				: eTag instanceof HTMLElement ? eTag
+				: null;
+			clazz && this.dom && (this.dom.className = clazz);
 		}
 		/**
 		 * 是否有效
@@ -430,25 +432,53 @@ const $S = (function () {
 		 * @returns {this}
 		 */
 		empty() {
-			this.dom && (this.dom.innerHTML = '');
+			this.dom && this.dom.firstChild && (this.dom.innerHTML = '');
 			return this;
 		}
 		/**
-		 * 编辑
-		 * @param {...(Ele|Node|string|function(e:this):(Ele|Node|*)|*)} items
+		 * 子处理
+		 * @param {function(e:Ele|*)} fn 处理函数
 		 * @returns {this}
 		 */
-		append(...items) {
-			for (let itm of items) {
-				if (typeof itm === 'function') itm = itm(this);
-				if (typeof itm === 'string') {
-					itm = cnew(itm);
-					this.dom.appendChild(itm.dom);
-				}else if (itm instanceof Ele) {
-					this.dom.appendChild(itm.dom);
-				}else if (itm instanceof Node) {
-					this.dom.appendChild(itm);
+		sub(fn) {
+			fn && fn(this);
+			return this;
+		}
+		/**
+		 * 设置内容子项（先清空，后添加）
+		 * @param  {...(String|Ele|Node|*)} ary 子项
+		 * @returns {this}
+		 */
+		content(...ary) {
+			this.empty();
+			for (let chd of ary) {
+				if (chd instanceof Ele) {
+					this.dom.appendChild(chd.dom);
+				}else if (chd instanceof Node) {
+					this.dom.appendChild(chd);
+				}else if (typeof(chd) === 'string') {
+					this.dom.appendChild(document.createTextNode(chd));
 				}
+			}
+			return this;
+		}
+		/**
+		 * 添加子项
+		 * @param {string|Ele|HTMLElement|*} eTag 标签或者元素
+		 * @param {string|function(e:Ele|*)} [clzFn] css类或者子处理函数
+		 * @param {String} [text] 文本内容；当clzFn是函数时有用
+		 * @returns {this}
+		 */
+		append(eTag, clzFn, text) {
+			let e = eTag instanceof Ele ? eTag : eTag instanceof HTMlElement ? new Ele(eTag) : cnew(eTag);
+			if (e) {
+				if (typeof(clzFn) === 'function') {
+					clzFn(e);
+				}else {
+					clzFn && e.mclazz(clzFn);
+					text && e.text(text);
+				}
+				this.dom.appendChild(e.dom);
 			}
 			return this;
 		}
@@ -488,7 +518,7 @@ const $S = (function () {
 			pp && pp.removeChild(this.dom);
 			return this;
 		}
-		// attributes & content --------------------------------------------------------------------------------------------
+		// attributes & html/text ------------------------------------------------------------------------------------------
 		/**
 		 * 标签名
 		 * @returns {string}
@@ -546,7 +576,7 @@ const $S = (function () {
 		 * @param {string} v 内容字符串
 		 * @returns {this|string}
 		 */
-		content(v) {
+		html(v) {
 			if (arguments.length >= 1) {
 				this.dom.innerHTML = (v === undefined || v === null) ? '' : v; return this;
 			}
@@ -643,19 +673,23 @@ const $S = (function () {
 		}
 		/**
 		 * 获取或修改css类
-		 * @param {string|string[]} [add] 添加的类
-		 * @param {string|string[]} [remove] 删除的类
+		 * @param {string} [add] 添加的类
+		 * @param {string} [remove] 删除的类
 		 * @returns {this}
 		 */
 		mclazz(add, remove) {
 			let list = this.dom.classList;
-			if (add) {
-				for (let c of i2a(add)) list.add(c);
-			}
-			if (remove) {
-				for (let c of i2a(remove)) list.remove(c);
-			}
+			for (let c of Ele.splitClazz(add)) list.add(c);
+			for (let c of Ele.splitClazz(remove)) list.remove(c);
 			return this;
+		}
+		/**
+		 * 分割转换css类
+		 * @param {String} clz css类
+		 * @returns {string[]}
+		 */
+		static splitClazz(clz) {
+			return clz ? clz.match(/[^ \t,]/g) : [];
 		}
 		/**
 		 * 检查是否拥有css类
@@ -729,9 +763,8 @@ const $S = (function () {
 		}
 		/**
 		 * 显示
-		 * @param {*} [params] 参数；方便继承
 		 */
-		show(params) {
+		show() {
 			this.dom.classList.remove('snowy-hidden');
 		}
 		/**
@@ -963,47 +996,39 @@ const $S = (function () {
 	/**
 	 * 新建元素
 	 * @param {string} tag 标签
-	 * @param {string|Object.<string,*>} [atc] css类或者属性集
-	 * @param {String} [content] 新建元素的内容（html）
+	 * @param {string} [clazz] css类
 	 * @returns {Ele|*}
 	 */
-	function cnew(tag, atc, content) {
+	function cnew(tag, clazz) {
 		let fn = _eleLib[tag],
 			e = fn ? fn() : new Ele(tag);
-		if (e) {
-			typeof(atc) === 'string' ? e.clazz(atc) : e.attr(atc);
-			content && e.content(content);
-		}
+		e && clazz && e.mclazz(clazz);
 		return e;
 	}
 
 	/** Page */
 	class Page extends Ele {
 		constructor() {
-			super('div').clazz('snowy_page');
-			this._need_init = true;
+			super('div', 'snowy-page');
 			this.id(nextId('page'));
 		}
 		/**
-		 * 显示
+		 * 初始化
 		 * @override
-		 * @param {*} [params] 参数
 		 */
-		show(params) {
-			super.show(params);
-			if (this._need_init) {
-				delete this._need_init;
-				this.dispatch('snowy_page_init', null, 0);
-			}
-			this.dispatch('snowy_page_show', null, 0);
+		onInit() {
 		}
 		/**
-		 * 隐藏
+		 * 页面显示
 		 * @override
 		 */
-		hide() {
-			super.hide();
-			this.dispatch('snowy_page_hide', null, 0);
+		onShow() {
+		}
+		/**
+		 * 页面隐藏
+		 * @override
+		 */
+		onHide() {
 		}
 	}
 	// 注册：默认页面
@@ -1012,7 +1037,7 @@ const $S = (function () {
 	/** Frame */
 	class Frame extends Ele {
 		constructor() {
-			super('div').clazz('snowy_frame');
+			super('div', 'snowy-frame');
 			/** @type {Ele} */
 			this.sheet = null;
 			/** @type {Object.<string,Page>} */
@@ -1031,9 +1056,14 @@ const $S = (function () {
 		 * @returns {Page|*}
 		 */
 		addPage(page) {
-			if (!this.sheet || !page) return null;
+			if (!page) return null;
+			if (!this.sheet) {
+				this.sheet = this.query('.snowy-sheet');
+				if (!this.sheet) throw 'No sheet';
+			}
 			this.sheet.append(page);
 			this.pages[page.id()] = page;
+			page.onInit();
 			return page;
 		}
 		/**
@@ -1064,7 +1094,7 @@ const $S = (function () {
 		 * @param {boolean} [noPush] 不添加历史状态
 		 */
 		showPage(pid, params, noPush) {
-			let p = this.pages[pid], oid = null;
+			let p = this.pages[pid], old = this.cpage;
 			if (!p) {
 				if (!this.sheet) return;
 				if (!getRegister(pid)) {
@@ -1074,18 +1104,19 @@ const $S = (function () {
 				p = cnew(pid);
 				this.addPage(p);
 			}
-			if (this.cpage) {
-				oid = this.cpage.id();
-				this.cpage.hide();
+			if (old) {
+				old.hide();
+				old.onHide();
 			}
 			this.cpage = p;
 			p.show(params);
+			p.onShow();
 			if (!noPush && (!history.state || history.state.pid != p.pid)) {
 				let url = urlParam(null, 'p', pid);
 				history.pushState({pid:p.pid}, document.title + '-' + p.title, url);
 			}
-			this.dispatch('snowy_page_changed', {
-				oldPid: oid, pid: p.id()
+			this.dispatch('change', {
+				oldPid: old && old.id(), pid: p.id()
 			}, 0);
 		}
 	}
@@ -1102,7 +1133,7 @@ const $S = (function () {
 		 * @param {String} firstTag 第一个子元素tag
 		 */
 		constructor(baseClz, firstTag) {
-			super('div').clazz(baseClz);
+			super('div', baseClz);
 			if (firstTag) {
 				this.dom.appendChild(document.createElement(firstTag));
 			}
@@ -1138,7 +1169,7 @@ const $S = (function () {
 		 * 构造函数
 		 */
 		constructor() {
-			super('snowy_menu', 'ul');
+			super('snowy-menu', 'ul');
 		}
 		/**
 		 * 添加子项
@@ -1157,12 +1188,12 @@ const $S = (function () {
 		 * @param {MenuItem} item 菜单项
 		 */
 		static _buildItem(ul, item) {
-			let li = cnew('li').append(cnew('div').append(div => {
+			let li = cnew('li').append(cnew('div').sub(div => {
 				div.attr('data-id', item.id);
 				item.icon && div.append('img');	// TODO: 未完成
 				typeof(item.click) === 'function' && div.on('click', item.click);
 				typeof(item.click) === 'string' && div.attr('onclick', item.click);
-				item.text && div.append(cnew('span').text(item.text));
+				item.text && div.append('span', null, item.text);
 			}));
 			if (Array.isArray(item.children)) {
 				let ul2 = cnew('ul').appendTo(li);

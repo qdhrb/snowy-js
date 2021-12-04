@@ -396,9 +396,8 @@ export default class Ele {
 	}
 	/**
 	 * 显示
-	 * @param {*} [params] 参数；方便继承
 	 */
-	show(params) {
+	show() {
 		this.dom.classList.remove('__CSS-hidden');
 	}
 	/**

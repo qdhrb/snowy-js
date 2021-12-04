@@ -15,7 +15,7 @@ export default {
 		banner:banner,
 		file: './dist/' + key + '-' + version + '.js',
 		format: 'iife',
-		name: '$S',
+		name: key,
 		preferConst:true
 	}],
 	plugins: [

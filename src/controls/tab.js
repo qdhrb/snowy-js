@@ -7,7 +7,7 @@ export default class Tab extends Control {
 	 * 构造函数
 	 */
 	constructor() {
-		super('__CSS_tab', 'ul');
+		super('__CSS-tab', 'ul');
 		// 事件：ul点击
 		this.fc().onclick = evt => {
 
